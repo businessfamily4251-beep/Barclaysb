@@ -32,1069 +32,699 @@
             from { transform: translateY(-1rem); }
             to { transform: translateY(0); }
         }
-        .slide-in-from-bottom-4 {
-            animation-name: slideInBottom;
-        }
-        @keyframes slideInBottom {
-            from { transform: translateY(1rem); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .zoom-in-95 {
-            animation-name: zoomIn;
-        }
-        @keyframes zoomIn {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        /* Simulation de l'icône de Contactless */
-        .contactless-icon {
-            transform: rotate(90deg);
-        }
-
-        /* Fix pour les écrans mobiles pour que la nav n'obstrue pas le contenu */
-        @media (max-width: 767px) {
-            .main-content {
-                padding-bottom: 70px; /* Espace pour la barre de navigation inférieure */
-            }
-        }
-        
-        /* Loading spinner for the transfer */
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Rend les lignes de transaction cliquables */
-        .transaction-row {
-            cursor: pointer;
-        }
     </style>
-    <!-- Inclure React et ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- Inclure Babel pour la compilation JSX dans le navigateur -->
+    <!-- Inclure React, ReactDOM, Lucide Icons, Recharts et Framer Motion -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <!-- Babel pour transformer le JSX dans le navigateur -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Inclure html2canvas et jspdf pour la génération de PDF (nécessite l'ordre, jspdf est inclus séparément dans une implémentation complète) -->
-    <!-- Pour cet exemple de fichier unique, nous allons nous contenter d'une implémentation JavaScript pure pour le téléchargement simulé. -->
 </head>
-<body>
+<body class="bg-gray-50 text-slate-900 font-sans">
     <div id="root"></div>
 
     <script type="text/babel">
-        // ==========================================
-        // SIMULATION DES ICONES LUCIDE-REACT
-        // ==========================================
-        const Bell = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.8 12.3a4.5 4.5 0 0 0-4.5-4.5H9.7a4.5 4.5 0 0 0-4.5 4.5v1.2a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.2zm-4.3 8a2 2 0 0 1-4 0"/></svg>;
-        const LogOut = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
-        const Home = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-        const ArrowRightLeft = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 11 20 14 17 17"/><line x1="4" y1="14" x2="20" y2="14"/><polyline points="7 7 4 10 7 13"/><line x1="20" y1="10" x2="4" y2="10"/></svg>;
-        const CreditCard = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
-        const X = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-        const Landmark = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><path d="M4 14.897V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10.897M12 2l4 3.5M12 2l-4 3.5M9 8h6M6 18h12"/></svg>;
-        const CheckCircle = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
-        const Settings = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2.73l-.15.1a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1 0-2.73l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>;
-        const TrendingUp = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>;
-        const Download = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
-        // NOUVELLES ICONES POUR L'AFFICHAGE DU SOLDE
-        const Eye = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
-        const EyeOff = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a1.8 1.8 0 0 1-.3-1"/><path d="M22 12s-3 7-10 7a9.7 9.7 0 0 1-5.06-1.07"/><line x1="2" y1="2" x2="22" y2="22"/><path d="M10.16 10.16c.32-.32.74-.5 1.2-.5.9 0 1.63.73 1.63 1.63 0 .46-.18.88-.5 1.2M12 7.7a3 3 0 0 0-3 3"/></svg>;
+        // Importation des composants Lucide nécessaires
+        const { 
+            LayoutDashboard, 
+            ArrowLeftRight, 
+            CreditCard, 
+            HandCoins, 
+            Settings, 
+            LogOut, 
+            Bell, 
+            Search, 
+            TrendingUp, 
+            TrendingDown, 
+            ChevronRight,
+            Plus,
+            Eye,
+            EyeOff,
+            Download,
+            X,
+            CheckCircle2,
+            Clock,
+            AlertCircle,
+            Filter,
+            PieChart,
+            ShieldCheck,
+            Zap,
+            Building2
+        } = lucide;
 
-        // NOUVELLES SIMULATIONS D'ICÔNES POUR LE MODAL DE CONTACT
-        const Mail = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>;
-        const Phone = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-5.6-5.6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.08 2h3a2 2 0 0 1 2 1.73c.04.54.05 1.07.03 1.62-.05.74-.27 1.44-.57 2.15l-.36.81c-.29.69-.19 1.48.24 2.1l3.65 3.65c.61.42 1.4.52 2.1.24l.81-.36c.7-.3 1.41-.52 2.15-.57a2 2 0 0 1 1.72.03c.55-.02 1.08-.01 1.62.03a2 2 0 0 1 1.73 2z"/></svg>;
+        const { 
+            LineChart, 
+            Line, 
+            XAxis, 
+            YAxis, 
+            CartesianGrid, 
+            Tooltip, 
+            ResponsiveContainer, 
+            AreaChart, 
+            Area 
+        } = Recharts;
 
+        const { motion, AnimatePresence } = FramerMotion;
 
-        // ==========================================
-        // DONNÉES FICTIVES INITIALES
-        // ==========================================
-        
+        // DONNÉES INITIALES (Simulation d'une API)
         const INITIAL_DATA = {
-            bankName: "BARCLAYS",
             user: {
-                // MODIFICATION: Geneviève Moulin -> Monique Abillard
-                name: "Monique Abillard",
-                loginId: "7897620168",
-                password: "548521"
+                name: "Alexandre Dupuis",
+                accountNumber: "FR76 3000 6000 0123 4567 8901 234",
+                avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=100",
+                lastLogin: "15 Oct 2024 à 10:24"
             },
-            // MODIFICATION: Solde initial 367301.52 -> 376000
-            initialBalance: 376000, 
-            initialTransactions: [
-                // MODIFICATION: Mise à jour de la date: 15/10/2025 -> 08/12/2025
-                { id: 1, date: '08/12/2025', recipient: 'Blockchain', account: '********', amount: 376000, type: 'credit', description: 'Transfert de placements' },
+            accounts: [
+                { id: 1, name: "Compte Courant", balance: 5240.12, change: 12.5, type: "checking" },
+                { id: 2, name: "Livret A", balance: 12450.00, change: 2.1, type: "savings" },
+                { id: 3, name: "Compte Titres", balance: 8720.45, change: -4.2, type: "investment" }
             ],
-            // MODIFICATION: Mise à jour du message de notification
-            notificationMessage: `
-                Information Importante
-
-                1. 376 000 euros ont été générés à la suite de placements effectués sur les marchés.
-                En l’absence d’une infrastructure de gestion d’actifs numériques dédiée,
-                les produits financiers ont été provisoirement centralisés auprès de la banque Barclays, avant d’être transférés sur votre compte.
-            `,
-            // Détails du gestionnaire pour le modal de contact
-            contactDetails: {
-                email: "serviceclients@mail.com",
-                phone: "+33644672929" 
-            }
+            transactions: [
+                { id: 1, title: "Loyer Octobre", category: "Logement", amount: -1200.00, date: "2024-10-01", status: "completed" },
+                { id: 2, title: "Salaire Septembre", category: "Revenus", amount: 3450.00, date: "2024-09-30", status: "completed" },
+                { id: 3, title: "Supermarché", category: "Alimentation", amount: -84.25, date: "2024-10-05", status: "completed" },
+                { id: 4, title: "Netflix", category: "Loisirs", amount: -17.99, date: "2024-10-06", status: "completed" },
+                { id: 5, title: "Remboursement SNCF", category: "Transport", amount: 45.50, date: "2024-10-07", status: "pending" },
+                { id: 6, title: "Restaurant Le Gourmet", category: "Alimentation", amount: -124.00, date: "2024-10-08", status: "completed" }
+            ],
+            chartData: [
+                { name: 'Lun', amount: 4200 },
+                { name: 'Mar', amount: 4150 },
+                { name: 'Mer', amount: 4300 },
+                { name: 'Jeu', amount: 4280 },
+                { name: 'Ven', amount: 4500 },
+                { name: 'Sam', amount: 4600 },
+                { name: 'Dim', amount: 5240 },
+            ]
         };
 
-        const formatCurrency = (amount) => {
-            // Utiliser Math.abs pour s'assurer que l'affichage du montant est correct pour le formatteur
-            const displayAmount = Math.abs(amount);
-            // Conversion en chaîne avec séparateur de milliers et virgule pour les décimales
-            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(displayAmount);
-        };
+        // --- COMPOSANTS UI DE BASE ---
 
-        // Fonction pour formater/crypter le numéro de carte
-        const formatCardNumber = (number) => {
-            // Simuler un numéro de carte crypté
-            const visible = number.slice(-4);
-            const hidden = '•••• •••• •••• ';
-            return hidden + visible;
-        };
-        
-        // Fonction utilitaire pour simuler le téléchargement de REÇU TEXTE
-        const downloadReceipt = (transaction, bankName, userName) => {
-            const isCredit = transaction.amount >= 0 && transaction.type === 'credit';
-            const sign = isCredit ? 'Crédit' : 'Débit';
-            const amount = formatCurrency(transaction.amount);
-            const type = isCredit ? 'Entrant' : 'Sortant';
-            
-            // Contenu de base du reçu
-            const receiptContent = `
-========================================
-REÇU DE TRANSACTION
-Banque : ${bankName}
-Client : ${userName}
-Date d'édition : ${new Date().toLocaleDateString('fr-FR')}
-========================================
-Type de Mouvement : ${sign}
-Date de Transaction : ${transaction.date}
-Montant : ${amount}
-Destinataire/Émetteur : ${transaction.recipient}
-Compte : ${transaction.account}
-Nature : ${transaction.description} (${type})
-Réf. Transaction : ${transaction.id}
-========================================
-Ceci est un reçu généré électroniquement.
-`;
-
-            // Création d'un Blob (objet de données) de type texte
-            const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            
-            // Modification: Changer l'extension du fichier à .txt
-            const fileName = `Reçu_${sign}_${transaction.date.replace(/\//g, '-')}_${transaction.id}.txt`;
-
-            // Création d'un lien invisible pour déclencher le téléchargement
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url); // Libérer la mémoire
-        };
-
-
-        // ==========================================
-        // SOUS-COMPOSANTS
-        // ==========================================
-        
-        // Composant Notification de Succès
-        function SuccessToast({ message, onClose }) {
-            React.useEffect(() => {
-                const timer = setTimeout(() => {
-                    onClose();
-                }, 4000); // Disparaît après 4 secondes
-                return () => clearTimeout(timer);
-            }, [onClose]);
-
-            return (
-                <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="flex items-center gap-3 bg-green-600 text-white p-4 rounded-xl shadow-2xl shadow-green-600/30">
-                        <CheckCircle className="w-6 h-6" />
-                        <span className="font-medium">{message}</span>
-                        <button onClick={onClose} className="p-1 rounded-full hover:bg-white/10 ml-2">
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-        
-        // NOUVEAU COMPOSANT : Modal de contact du gestionnaire
-        function ContactManagerModal({ isOpen, onClose, email, phone }) {
-            if (!isOpen) return null;
-
-            return (
-                <div 
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300"
-                    onClick={onClose} // Fermer en cliquant à l'extérieur
-                >
-                    <div 
-                        className="bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in zoom-in-95 slide-in-from-top-4 duration-300"
-                        onClick={(e) => e.stopPropagation()} // Empêcher la fermeture en cliquant dans le modal
-                    >
-                        <div className="bg-sky-500 text-white p-4 rounded-t-xl flex justify-between items-center">
-                            <h3 className="font-bold text-lg">Contact Gestionnaire</h3>
-                            <button onClick={onClose} className="p-1 rounded-full hover:bg-white/20">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <p className="text-slate-700 mb-4 font-medium text-center">
-                                Veuillez contacter votre gestionnaire
-                            </p>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                                    <Mail className="w-5 h-5 text-sky-500" />
-                                    <a href={`mailto:${email}`} className="text-sky-600 hover:underline font-mono">
-                                        {email}
-                                    </a>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                                    <Phone className="w-5 h-5 text-sky-500" />
-                                    <a href={`tel:${phone.replace(/\s/g, '')}`} className="text-sky-600 hover:underline font-mono">
-                                        {phone}
-                                    </a>
-                                </div>
-                            </div>
-                            <p className="text-xs text-slate-400 mt-4 text-center">
-                                Nous vous répondrons dans les plus brefs délais.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-        
-        // NOUVEAU COMPOSANT : Modal de Reçu de Transaction
-        function ReceiptModal({ isOpen, onClose, transaction, bankName, userName }) {
-            if (!isOpen || !transaction) return null;
-            
-            const isCredit = transaction.amount >= 0 && transaction.type === 'credit';
-            const movementType = isCredit ? 'Crédit' : 'Débit';
-            const flowType = isCredit ? 'Entrant' : 'Sortant';
-            const amountColor = isCredit ? 'text-green-600' : 'text-red-600';
-
-            const handleDownload = () => {
-                downloadReceipt(transaction, bankName, userName);
-                // Optionnel : afficher un petit toast de confirmation de téléchargement
+        const Button = ({ children, variant = "primary", className = "", ...props }) => {
+            const variants = {
+                primary: "bg-blue-600 text-white hover:bg-blue-700",
+                secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
+                outline: "border border-gray-200 bg-transparent hover:bg-gray-50",
+                ghost: "hover:bg-gray-100",
+                danger: "bg-red-500 text-white hover:bg-red-600"
             };
-
-            const DetailsRow = ({ label, value, monospace = false, color = 'text-slate-800' }) => (
-                <div className="flex justify-between py-2 border-b border-slate-100">
-                    <span className="text-slate-500">{label}</span>
-                    <span className={`font-medium ${monospace ? 'font-mono' : ''} ${color}`}>{value}</span>
-                </div>
+            
+            return (
+                <button 
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 ${variants[variant]} ${className}`}
+                    {...props}
+                >
+                    {children}
+                </button>
             );
+        };
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+                {children}
+            </div>
+        );
+
+        // --- VUES DE L'APPLICATION ---
+
+        const DashboardView = ({ data, onNewTransfer, onShowReceipt, showBalance, toggleBalanceVisibility }) => {
+            const totalBalance = data.accounts.reduce((acc, curr) => acc + curr.balance, 0);
 
             return (
-                <div 
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300"
-                    onClick={onClose}
-                >
-                    <div 
-                        className="bg-white rounded-xl shadow-2xl w-full max-w-lg animate-in zoom-in-95 slide-in-from-top-4 duration-300"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="bg-sky-500 text-white p-4 rounded-t-xl flex justify-between items-center">
-                            <h3 className="font-bold text-lg">Reçu de Transaction</h3>
-                            <button onClick={onClose} className="p-1 rounded-full hover:bg-white/20">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
+                <div className="space-y-6">
+                    {/* Header Statistics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card className="p-6 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+                            <div className="flex justify-between items-start mb-4">
+                                <span className="text-blue-100">Solde Total</span>
+                                <button onClick={toggleBalanceVisibility} className="p-1 hover:bg-white/10 rounded">
+                                    {showBalance ? <Eye size={20} /> : <EyeOff size={20} />}
+                                </button>
+                            </div>
+                            <div className="text-3xl font-bold mb-2">
+                                {showBalance ? `${totalBalance.toLocaleString('fr-FR')} €` : '•••••• €'}
+                            </div>
+                            <div className="flex items-center text-sm text-blue-100">
+                                <TrendingUp size={16} className="mr-1" />
+                                <span>+2.4% ce mois-ci</span>
+                            </div>
+                        </Card>
                         
-                        <div className="p-6">
-                            <div className="text-center mb-6">
-                                <p className="text-sm text-slate-500">{bankName}</p>
-                                <p className="text-2xl font-bold mb-1">
-                                    {isCredit ? '+' : '-'} {formatCurrency(transaction.amount)}
-                                </p>
-                                <span className={`text-sm font-semibold ${amountColor}`}>{movementType} {flowType}</span>
+                        <Card className="p-6">
+                            <div className="flex justify-between items-start mb-4 text-gray-500">
+                                <span>Revenus</span>
+                                <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                                    <TrendingUp size={20} />
+                                </div>
                             </div>
+                            <div className="text-2xl font-bold">+ 4,250.00 €</div>
+                            <div className="text-sm text-gray-400 mt-2">Derniers 30 jours</div>
+                        </Card>
 
-                            <div className="space-y-1 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                <DetailsRow label="Réf. Transaction" value={transaction.id} monospace={true} />
-                                <DetailsRow label="Date de transaction" value={transaction.date} />
-                                <DetailsRow label="Type de mouvement" value={movementType} />
-                                <DetailsRow label="Partie Opposée" value={transaction.recipient} />
-                                <DetailsRow label="Compte Associé" value={transaction.account} monospace={true} />
-                                <DetailsRow label="Description" value={transaction.description} color='text-slate-600' />
-                                <DetailsRow label="Titulaire du Compte" value={userName} />
+                        <Card className="p-6">
+                            <div className="flex justify-between items-start mb-4 text-gray-500">
+                                <span>Dépenses</span>
+                                <div className="p-2 bg-red-50 text-red-600 rounded-lg">
+                                    <TrendingDown size={20} />
+                                </div>
                             </div>
+                            <div className="text-2xl font-bold">- 1,840.25 €</div>
+                            <div className="text-sm text-gray-400 mt-2">Derniers 30 jours</div>
+                        </Card>
+                    </div>
 
-                            <button
-                                onClick={handleDownload}
-                                // Modification du texte du bouton pour refléter le format TXT
-                                className="mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-green-500/30 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-                            >
-                                <Download className="w-5 h-5" />
-                                Télécharger le reçu (TXT)
-                            </button>
-                            {/* SUPPRESSION DE L'INSCRIPTION DEMANDÉE : (Le PDF est un document texte simulé pour cette démonstration) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Accounts List */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <Card className="p-6">
+                                <h2 className="text-lg font-bold mb-6 flex items-center justify-between">
+                                    Vos Comptes
+                                    <Button variant="ghost" className="text-blue-600 text-sm">Gérer</Button>
+                                </h2>
+                                <div className="space-y-4">
+                                    {data.accounts.map(acc => (
+                                        <div key={acc.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+                                                    {acc.type === 'checking' ? <Building2 size={20} /> : <PieChart size={20} />}
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold">{acc.name}</div>
+                                                    <div className="text-sm text-gray-400">Terminant par {INITIAL_DATA.user.accountNumber.slice(-4)}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="font-bold">
+                                                    {showBalance ? `${acc.balance.toLocaleString('fr-FR')} €` : '•••••• €'}
+                                                </div>
+                                                <div className={`text-xs ${acc.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                    {acc.change >= 0 ? '+' : ''}{acc.change}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+
+                            <Card className="p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-lg font-bold">Évolution du Solde</h2>
+                                    <select className="bg-gray-50 border-none text-sm rounded-lg focus:ring-0">
+                                        <option>7 derniers jours</option>
+                                        <option>30 derniers jours</option>
+                                    </select>
+                                </div>
+                                <div className="h-64 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={data.chartData}>
+                                            <defs>
+                                                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
+                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                                            <YAxis hide />
+                                            <Tooltip 
+                                                contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                                                formatter={(value) => [`${value} €`, 'Solde']}
+                                            />
+                                            <Area type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* Recent Transactions */}
+                        <div className="lg:col-span-1">
+                            <Card className="p-6 h-full">
+                                <h2 className="text-lg font-bold mb-6">Transactions Récentes</h2>
+                                <div className="space-y-6">
+                                    {data.transactions.map(tx => (
+                                        <div 
+                                            key={tx.id} 
+                                            className="flex items-center justify-between group cursor-pointer"
+                                            onClick={() => onShowReceipt(tx)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                                    tx.amount < 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+                                                }`}>
+                                                    {tx.amount < 0 ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold group-hover:text-blue-600 transition-colors">{tx.title}</div>
+                                                    <div className="text-xs text-gray-400">{tx.category} • {tx.date}</div>
+                                                </div>
+                                            </div>
+                                            <div className={`text-sm font-bold ${tx.amount < 0 ? 'text-gray-900' : 'text-green-600'}`}>
+                                                {tx.amount < 0 ? '' : '+'}{tx.amount.toFixed(2)} €
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Button variant="outline" className="w-full mt-8 text-sm">Voir tout l'historique</Button>
+                            </Card>
                         </div>
                     </div>
                 </div>
             );
-        }
+        };
 
-        function LoginPage({ onLoginSuccess, correctLogin, bankName }) {
-            // ... (code de LoginPage inchangé)
-            const [loginId, setLoginId] = React.useState('');
-            const [password, setPassword] = React.useState('');
-            const [error, setError] = React.useState('');
+        const TransferView = ({ onTransfer }) => {
+            const [amount, setAmount] = React.useState('');
+            const [beneficiary, setBeneficiary] = React.useState('');
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (loginId === correctLogin.loginId && password === correctLogin.password) {
-                    onLoginSuccess();
-                } else {
-                    setError("Identifiants incorrects. Veuillez réessayer.");
-                }
+                onTransfer({ amount: parseFloat(amount), beneficiary });
+                setAmount('');
+                setBeneficiary('');
             };
 
             return (
-                <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-100 to-white p-4">
-                    <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
-                        <div className="bg-sky-500 p-6 text-center">
-                            <div className="inline-block p-3 rounded-full bg-white/20 mb-2">
-                                <Landmark className="text-white w-8 h-8" />
+                <div className="max-w-2xl mx-auto">
+                    <Card className="p-8">
+                        <h2 className="text-2xl font-bold mb-6">Nouveau Virement</h2>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Compte à débiter</label>
+                                <select className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option>Compte Courant (5 240,12 €)</option>
+                                    <option>Livret A (12 450,00 €)</option>
+                                </select>
                             </div>
-                            <h1 className="text-2xl font-bold text-white tracking-wider">{bankName}</h1>
-                            <p className="text-sky-100 text-sm mt-1">Accès Sécurisé</p>
-                        </div>
-                        
-                        <div className="p-8">
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-600 mb-1">Identifiant</label>
-                                    <input 
-                                        type="text" 
-                                        value={loginId} 
-                                        onChange={(e) => setLoginId(e.target.value)} 
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all bg-slate-50 focus:bg-white"
-                                        placeholder="Entrez votre identifiant"
-                                        required 
-                                    />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Bénéficiaire</label>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <Button type="button" variant="outline" className="h-12 border-blue-200 bg-blue-50 text-blue-700">Mes Comptes</Button>
+                                    <Button type="button" variant="outline" className="h-12">Nouveau Tiers</Button>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-600 mb-1">Mot de passe</label>
+                                <input 
+                                    type="text"
+                                    required
+                                    placeholder="Nom ou IBAN"
+                                    value={beneficiary}
+                                    onChange={(e) => setBeneficiary(e.target.value)}
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Montant</label>
+                                <div className="relative">
                                     <input 
-                                        type="password" 
-                                        value={password} 
-                                        onChange={(e) => setPassword(e.target.value)} 
-                                        className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all bg-slate-50 focus:bg-white"
-                                        placeholder="••••••"
-                                        required 
+                                        type="number"
+                                        required
+                                        placeholder="0.00"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-2xl font-bold"
                                     />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">€</span>
                                 </div>
-                                
-                                {error && (
-                                    <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center">
-                                        <span className="mr-2">⚠️</span> {error}
-                                    </div>
-                                )}
-
-                                <button type="submit" className="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-4 rounded-lg shadow-lg shadow-sky-500/30 transition-all transform active:scale-[0.98]">
-                                    Se connecter
-                                </button>
-                                
-                                {/* Ligne suivante retirée comme demandé : ID: 7897620168 | MDP: 548521 */}
-                                {/* <div className="text-center mt-4">
-                                    <p className="text-xs text-slate-400">ID: {correctLogin.loginId} | MDP: {correctLogin.password}</p>
-                                </div> 
-                                */}
-                            </form>
-                        </div>
-                    </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Motif (optionnel)</label>
+                                <input 
+                                    type="text"
+                                    placeholder="Ex: Cadeau d'anniversaire"
+                                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                            </div>
+                            <Button type="submit" className="w-full py-4 text-lg">Confirmer le virement</Button>
+                        </form>
+                    </Card>
                 </div>
             );
-        }
+        };
 
-        function Header({ userName, bankName, onLogout, onToggleNotification, notificationActive }) {
-            // ... (code de Header inchangé)
+        const CardView = ({ userName }) => {
+            const [isLocked, setIsLocked] = React.useState(false);
+            
             return (
-                <header className="bg-white border-b border-slate-200 sticky top-0 z-20 px-4 py-3 md:px-6 flex justify-between items-center shadow-sm">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-sky-500 p-1.5 rounded-lg">
-                            <Landmark className="text-white w-5 h-5" />
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        {/* Virtual Card Rendering */}
+                        <div className="relative aspect-[1.586/1] w-full rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-8 text-white shadow-2xl overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-blue-500/20 transition-colors"></div>
+                            <div className="flex justify-between items-start relative z-10">
+                                <div className="text-xl font-bold tracking-widest italic">BARCLAYS</div>
+                                <div className="w-12 h-8 bg-amber-200/20 rounded-md backdrop-blur-sm border border-amber-200/30 flex items-center justify-center">
+                                    <div className="w-8 h-6 bg-gradient-to-r from-amber-400 to-amber-200 rounded-sm"></div>
+                                </div>
+                            </div>
+                            <div className="mt-12 space-y-4 relative z-10">
+                                <div className="text-2xl font-mono tracking-[0.2em]">•••• •••• •••• 8842</div>
+                                <div className="flex gap-8 text-xs uppercase tracking-widest opacity-60">
+                                    <div>Exp: 08/27</div>
+                                    <div>CVV: •••</div>
+                                </div>
+                                <div className="text-lg font-medium tracking-wide">{userName.toUpperCase()}</div>
+                            </div>
+                            <div className="absolute bottom-8 right-8 flex items-center gap-1 opacity-80">
+                                <div className="w-8 h-8 rounded-full bg-red-500/80"></div>
+                                <div className="w-8 h-8 rounded-full bg-amber-500/80 -ml-4"></div>
+                            </div>
                         </div>
-                        <span className="font-bold text-xl text-sky-600 tracking-tight">{bankName}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 md:gap-6">
-                        <span className="hidden md:block text-sm font-medium text-slate-600">
-                            Bonjour, <span className="text-slate-900 font-bold">{userName}</span>
-                        </span>
-                        
-                        <button 
-                            onClick={onToggleNotification}
-                            className={`relative p-2 rounded-full transition-colors ${notificationActive ? 'bg-sky-50 text-sky-600' : 'hover:bg-slate-100 text-slate-500'}`}
-                        >
-                            <Bell className="w-5 h-5" />
-                            {notificationActive && (
-                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-                            )}
-                        </button>
-                        
-                        <button 
-                            onClick={onLogout} 
-                            className="flex items-center gap-2 text-slate-500 hover:text-red-500 transition-colors text-sm font-medium"
-                        >
-                            <span className="hidden md:inline">Déconnexion</span>
-                            <LogOut className="w-4 h-4" />
-                        </button>
-                    </div>
-                </header>
-            );
-        }
 
-        function NotificationPanel({ message, onClose }) {
-            // Le message a été formaté avec des retours à la ligne pour un meilleur affichage dans le modal
-            const lines = message.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
-            return (
-                <div className="absolute top-16 right-4 md:right-6 z-30 w-full max-w-sm animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="bg-white rounded-xl shadow-xl border border-sky-100 overflow-hidden">
-                        <div className="bg-sky-500 text-white p-4 rounded-t-xl flex justify-between items-center">
-                            <h3 className="font-bold text-lg">Information Importante</h3>
-                            <button onClick={onClose} className="p-1 rounded-full hover:bg-white/20">
-                                <X className="w-4 h-4" />
-                            </button>
+                        <div className="space-y-4">
+                            <h2 className="text-2xl font-bold">Ma Carte Visa Infinite</h2>
+                            <p className="text-gray-500 italic">"Votre carte est active et sécurisée."</p>
+                            <div className="grid grid-cols-2 gap-3 pt-4">
+                                <Button variant={isLocked ? "primary" : "outline"} onClick={() => setIsLocked(!isLocked)} className="flex-col p-4 h-auto">
+                                    <ShieldCheck size={24} className="mb-2" />
+                                    <span>{isLocked ? "Débloquer" : "Bloquer"}</span>
+                                </Button>
+                                <Button variant="outline" className="flex-col p-4 h-auto">
+                                    <Search size={24} className="mb-2" />
+                                    <span>Code PIN</span>
+                                </Button>
+                            </div>
                         </div>
-                        <div className="p-4 bg-sky-50/50">
-                            {lines.map((line, index) => (
-                                // Utiliser une balise <p> ou <div> pour chaque ligne, en gérant les puces/numérotations
-                                <p 
-                                    key={index} 
-                                    className={`text-sm text-slate-700 leading-relaxed ${line.startsWith('1.') || line.startsWith('2.') ? 'font-semibold mt-2' : 'ml-3'}`}
-                                >
-                                    {line}
-                                </p>
+                    </div>
+
+                    <Card className="p-6">
+                        <h3 className="font-bold mb-4">Réglages et Limites</h3>
+                        <div className="space-y-6">
+                            {[
+                                { label: "Plafond de paiement mensuel", value: "5 000 €", used: 1240 },
+                                { label: "Plafond de retrait hebdomadaire", value: "1 000 €", used: 250 }
+                            ].map((limit, idx) => (
+                                <div key={idx}>
+                                    <div className="flex justify-between text-sm mb-2">
+                                        <span className="text-gray-500">{limit.label}</span>
+                                        <span className="font-semibold">{limit.used} € / {limit.value}</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-blue-600 rounded-full" 
+                                            style={{ width: `${(limit.used / parseInt(limit.value.replace(' ', ''))) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
                             ))}
                         </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const LoanView = () => (
+            <div className="max-w-4xl mx-auto space-y-6">
+                <Card className="p-8 bg-blue-600 text-white overflow-hidden relative">
+                    <div className="relative z-10">
+                        <h2 className="text-3xl font-bold mb-4">Un projet en tête ?</h2>
+                        <p className="text-blue-100 mb-6 text-lg max-w-lg">
+                            Profitez de nos taux exceptionnels à partir de 2.95% TAEG fixe sur les prêts personnels. Réponse de principe immédiate.
+                        </p>
+                        <Button className="bg-white text-blue-600 hover:bg-blue-50 border-none px-8 py-3 rounded-full text-lg">
+                            Simuler mon crédit
+                        </Button>
+                    </div>
+                    <Zap className="absolute right-[-40px] top-[-40px] w-64 h-64 text-blue-500 opacity-30" />
+                </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card className="p-6">
+                        <h3 className="font-bold mb-4 flex items-center gap-2">
+                            <HandCoins className="text-blue-600" /> Vos Prêts en Cours
+                        </h3>
+                        <div className="text-center py-8 text-gray-400">
+                            Vous n'avez aucun prêt actif pour le moment.
+                        </div>
+                    </Card>
+                    <Card className="p-6">
+                        <h3 className="font-bold mb-4">Offres Recommandées</h3>
+                        <div className="space-y-4">
+                            <div className="p-4 border border-blue-100 bg-blue-50 rounded-xl">
+                                <div className="font-bold text-blue-900">Prêt Immobilier</div>
+                                <div className="text-sm text-blue-700">Taux préférentiel à 3.10%</div>
+                            </div>
+                            <div className="p-4 border border-gray-100 rounded-xl">
+                                <div className="font-bold">Prêt Étudiant</div>
+                                <div className="text-sm text-gray-500">Jusqu'à 45 000 € à 0.90%</div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+
+        const SettingsView = () => (
+            <div className="max-w-2xl mx-auto space-y-6">
+                <h2 className="text-2xl font-bold mb-6">Paramètres</h2>
+                <Card>
+                    <div className="divide-y divide-gray-100">
+                        {[
+                            { icon: <ShieldCheck />, label: "Sécurité & Mot de passe", sub: "Double authentification activée" },
+                            { icon: <Bell />, label: "Notifications", sub: "SMS, Email et Push" },
+                            { icon: <PieChart />, label: "Affichage & Devises", sub: "Euro (€), Mode clair" },
+                            { icon: <HandCoins />, label: "Frais & Commissions", sub: "Consulter la grille tarifaire" }
+                        ].map((item, idx) => (
+                            <div key={idx} className="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="text-blue-600">{item.icon}</div>
+                                    <div>
+                                        <div className="font-semibold">{item.label}</div>
+                                        <div className="text-xs text-gray-400">{item.sub}</div>
+                                    </div>
+                                </div>
+                                <ChevronRight className="text-gray-300" />
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+                <Button variant="danger" className="w-full flex items-center gap-2">
+                    <LogOut size={20} /> Se déconnecter
+                </Button>
+            </div>
+        );
+
+        // --- COMPOSANTS DE MODALES ---
+
+        const Modal = ({ isOpen, onClose, title, children }) => (
+            <AnimatePresence>
+                {isOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={onClose}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative z-10"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                                <h3 className="text-xl font-bold">{title}</h3>
+                                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="p-6">
+                                {children}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        );
+
+        const ReceiptModal = ({ transaction, onClose }) => {
+            if (!transaction) return null;
+            
+            return (
+                <div className="space-y-6">
+                    <div className="text-center pb-6">
+                        <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4 ${
+                            transaction.amount < 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+                        }`}>
+                            {transaction.status === 'completed' ? <CheckCircle2 size={32} /> : <Clock size={32} />}
+                        </div>
+                        <h4 className="text-3xl font-bold">{transaction.amount.toFixed(2)} €</h4>
+                        <p className="text-gray-400">{transaction.title}</p>
+                    </div>
+                    
+                    <div className="space-y-4 border-t border-dashed border-gray-200 pt-6">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Statut</span>
+                            <span className="font-semibold text-green-600 uppercase tracking-wider">{transaction.status}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Date & Heure</span>
+                            <span className="font-semibold">{transaction.date} à 14:32</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Catégorie</span>
+                            <span className="font-semibold">{transaction.category}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Référence</span>
+                            <span className="font-mono text-xs text-gray-400">#TRX-948271045</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-6">
+                        <Button variant="outline" className="w-full">
+                            <Download size={18} /> Reçu
+                        </Button>
+                        <Button variant="primary" className="w-full">Partager</Button>
                     </div>
                 </div>
             );
-        }
+        };
 
-        function Navigation({ currentView, setCurrentView }) {
+        // --- COMPOSANT PRINCIPAL (APP) ---
+
+        function App() {
+            const [currentView, setCurrentView] = React.useState('dashboard');
+            const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+            const [isTransferModalOpen, setIsTransferModalOpen] = React.useState(false);
+            const [selectedTransaction, setSelectedTransaction] = React.useState(null);
+            const [notifications, setNotifications] = React.useState(3);
+            const [showBalance, setShowBalance] = React.useState(true); // État global pour la visibilité du solde
+
+            // Gestion des transferts
+            const handleTransfer = (details) => {
+                setIsTransferModalOpen(true);
+                // Dans une vraie app, on ferait un appel API ici
+            };
+
+            const handleShowReceipt = (tx) => {
+                setSelectedTransaction(tx);
+            };
+
+            const toggleBalanceVisibility = () => {
+                setShowBalance(!showBalance);
+            };
+
             const navItems = [
-                { id: 'dashboard', label: 'Tableau de bord', icon: Home },
-                { id: 'transfer', label: 'Virement', icon: ArrowRightLeft },
-                { id: 'card', label: 'Carte', icon: CreditCard },
-                { id: 'loan', label: 'Prêt', icon: TrendingUp }, // Nouveau bouton Prêt
-                { id: 'settings', label: 'Réglage', icon: Settings }, // Nouveau bouton Réglage
+                { id: 'dashboard', icon: <LayoutDashboard size={22} />, label: "Dashboard" },
+                { id: 'transfer', icon: <ArrowLeftRight size={22} />, label: "Virements" },
+                { id: 'card', icon: <CreditCard size={22} />, label: "Ma Carte" },
+                { id: 'loan', icon: <HandCoins size={22} />, label: "Crédits" },
+                { id: 'settings', icon: <Settings size={22} />, label: "Paramètres" }
             ];
 
             return (
-                <nav className="md:w-64 bg-white border-r border-slate-200 flex md:flex-col justify-around md:justify-start fixed bottom-0 w-full md:relative md:h-auto z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none p-2 md:p-4 gap-1 md:gap-2">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = currentView === item.id;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => setCurrentView(item.id)}
-                                className={`flex flex-col md:flex-row items-center md:gap-3 p-2 md:px-4 md:py-3 rounded-lg transition-all w-full md:text-left text-xs md:text-sm font-medium
-                                    ${isActive 
-                                        ? 'text-sky-600 bg-sky-50 md:bg-sky-50' 
-                                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
-                            >
-                                <Icon className={`w-6 h-6 md:w-5 md:h-5 mb-1 md:mb-0 ${isActive ? 'stroke-[2.5px]' : ''}`} />
-                                <span>{item.label}</span>
-                            </button>
-                        );
-                    })}
-                </nav>
-            );
-        }
-
-        // Ajout des props showBalance et toggleBalanceVisibility
-        function DashboardView({ balance, transactions, onShowContactModal, onShowReceipt, showBalance, toggleBalanceVisibility }) {
-            return (
-                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-                    {/* Balance Card */}
-                    <div className="bg-gradient-to-r from-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-lg shadow-sky-500/20 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-16 -mt-32 blur-2xl"></div>
-                        <div className="relative z-10">
-                            <h2 className="text-sky-100 text-sm font-medium mb-1">Solde disponible</h2>
-                            
-                            {/* NOUVELLE MISE EN PAGE POUR LE BOUTON TOGGLE */}
-                            <div className="flex items-center justify-between"> 
-                                <p className="text-4xl font-bold mb-4">
-                                    {showBalance ? formatCurrency(balance) : '•••••••••'}
-                                </p>
-                                
-                                {/* Bouton pour basculer la visibilité */}
-                                <button 
-                                    onClick={toggleBalanceVisibility} 
-                                    className="p-2 -mt-4 rounded-full text-sky-100 hover:text-white hover:bg-white/10 transition-colors"
-                                    aria-label={showBalance ? "Masquer le solde" : "Afficher le solde"}
-                                >
-                                    {showBalance ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
-                                </button>
-                            </div>
-                            
-                            <div className="flex items-center justify-between bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                                <div>
-                                    <p className="text-xs text-sky-100">IBAN</p>
-                                    <p className="font-mono text-sm">FR76 BARC 2000 1000 1234 5678 901</p>
+                <div className="min-h-screen flex bg-gray-50">
+                    {/* Sidebar */}
+                    <aside className={`
+                        fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 transition-transform duration-300 lg:translate-x-0
+                        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                    `}>
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 text-blue-600 mb-10">
+                                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                                    <TrendingUp size={24} />
                                 </div>
-                                <CreditCard className="w-6 h-6 text-sky-200" />
+                                <span className="text-xl font-black tracking-tight text-slate-800">BARCLAYS</span>
                             </div>
-                        </div>
-                    </div>
-                    
-                    {/* NOUVEAU BOUTON CONTACTER GESTIONNAIRE */}
-                    <div className="text-center">
-                        <button 
-                            onClick={onShowContactModal} 
-                            className="flex items-center justify-center gap-2 text-sky-600 hover:text-sky-700 font-semibold p-3 rounded-xl transition-colors border border-sky-200 bg-sky-50/50 hover:bg-sky-100 mx-auto"
-                        >
-                            <Phone className="w-5 h-5" />
-                            Contacter gestionnaire
-                        </button>
-                    </div>
 
-                    {/* Transactions */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h3 className="font-semibold text-slate-700">Historique des transactions</h3>
-                            <span className="text-xs font-medium text-sky-600 bg-sky-50 px-2 py-1 rounded-full">Ce mois</span>
-                        </div>
-                        <ul className="divide-y divide-slate-100">
-                            {/* Assurez-vous que l'historique est trié du plus récent (ID le plus élevé) au plus ancien */}
-                            {transactions.sort((a, b) => b.id - a.id).map(tx => {
-                                // Déterminer si c'est un débit (montant négatif) ou un crédit (montant positif)
-                                const isCredit = tx.amount >= 0 && tx.type === 'credit';
-                                // const isDebit = tx.amount < 0 && tx.type === 'debit'; // Non utilisé
-                                
-                                return (
-                                    <li 
-                                        key={tx.id} 
-                                        className="px-6 py-4 hover:bg-sky-50 transition-colors flex items-center justify-between group transaction-row"
-                                        onClick={() => onShowReceipt(tx)} // Rendre la ligne cliquable pour le reçu
+                            <nav className="space-y-1">
+                                {navItems.map(item => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setCurrentView(item.id)}
+                                        className={`
+                                            w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200
+                                            ${currentView === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50 hover:text-blue-600'}
+                                        `}
                                     >
-                                        <div className="flex items-start gap-4">
-                                            {/* Crédit : Vert / Débit : Rouge */}
-                                            <div className={`p-2 rounded-full ${isCredit ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                                {/* Flèche entrante pour crédit, flèche sortante pour débit */}
-                                                <ArrowRightLeft className={`w-5 h-5 ${isCredit ? 'rotate-180' : ''}`} />
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-slate-900">{tx.recipient}</p>
-                                                <p className="text-sm text-slate-500 font-mono">{tx.account}</p>
-                                                {/* Afficher la description pour les transactions intérieures */}
-                                                {tx.description && <p className="text-xs text-slate-400 mt-0.5 italic">{tx.description}</p>} 
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            {/* Afficher le signe - ou + et la couleur appropriée */}
-                                            <p className={`font-bold ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
-                                                {isCredit ? '+' : '-'} {formatCurrency(tx.amount)}
-                                            </p>
-                                            <p className="text-xs text-slate-400">{tx.date}</p>
-                                        </div>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                        {transactions.length === 0 && (
-                            <div className="text-center p-8 text-slate-500 italic">
-                                Aucune transaction récente.
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        function TransferView({ onTransfer }) {
-            const [formData, setFormData] = React.useState({
-                name: '',
-                iban: '',
-                amount: '',
-                description: ''
-            });
-            const [message, setMessage] = React.useState(null);
-            // État pour gérer le chargement 
-            const [isLoading, setIsLoading] = React.useState(false); 
-
-            const handleChange = (e) => {
-                const value = e.target.name === 'amount' 
-                              ? Math.abs(parseFloat(e.target.value) || 0) // S'assurer que le montant dans le champ est toujours positif
-                              : e.target.value;
-                setFormData({ ...formData, [e.target.name]: value });
-                setMessage(null); 
-            };
-
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                // const amountNum = parseFloat(formData.amount); // Cette variable n'est plus nécessaire ici pour la logique de blocage
-
-                if(isLoading) return; // Empêcher les soumissions multiples
-                
-                // Le formulaire est valide si tous les champs requis sont remplis.
-                if(!formData.name || !formData.iban || !formData.amount || parseFloat(formData.amount) <= 0) {
-                    setMessage({ type: 'error', text: "Veuillez remplir correctement tous les champs obligatoires (le montant doit être supérieur à zéro)." });
-                    return;
-                }
-
-                setIsLoading(true);
-                // Pas de message d'information visible, juste le spinner sur le bouton
-
-                // MODIFICATION: Simuler le délai de 7 secondes
-                await new Promise(resolve => setTimeout(resolve, 7000));
-
-                setIsLoading(false); // Arrêter le chargement
-                
-                // MODIFICATION: Forcer l'échec du virement avec le message d'erreur spécifié
-                setMessage({ 
-                    type: 'error', 
-                    text: `Erreur technique
-Le virement ne peut être effectué tant que les frais de traitement du service n'ont pas étés réglés.
-Veuillez procéder au paiement de ces frais afin de finaliser l'opération.
-Contactez le gestionnaire en charge de votre dossier.` 
-                });
-
-                // Retourner un objet d'échec (même si on ne l'utilise pas dans App, c'est bon pour la structure)
-                // Le message est affiché par setMessage ci-dessus.
-                // return { success: false, message: "Erreur technique..." }; // Ancien appel
-            };
-
-            // Rendu du message d'erreur dans le composant
-            const errorMessage = (message && message.type === 'error') ? message.text.split('\n').map((line, index) => (
-                <p key={index} className="leading-relaxed">{line}</p>
-            )) : null;
-
-
-            return (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <ArrowRightLeft className="text-sky-500" /> Nouveau virement
-                        </h2>
-                        <p className="text-slate-500 text-sm">Remplissez les informations du bénéficiaire ci-dessous.</p>
-                    </div>
-
-                    {/* Affichage des messages d'erreur */}
-                    {message && message.type === 'error' && (
-                        <div className={`mb-6 p-4 rounded-lg text-sm bg-red-50 text-red-600 border border-red-200`}>
-                            {errorMessage}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid md:grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-slate-700">Nom du bénéficiaire *</label>
-                                <input 
-                                    type="text" 
-                                    name="name" 
-                                    value={formData.name} 
-                                    onChange={handleChange} 
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all"
-                                    required 
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">IBAN du bénéficiaire *</label>
-                                <input 
-                                    type="text" 
-                                    name="iban" 
-                                    value={formData.iban} 
-                                    onChange={handleChange} 
-                                    placeholder="FR76...." 
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all"
-                                    required 
-                                    disabled={isLoading}
-                                />
-                            </div>
+                                        {item.icon}
+                                        <span>{item.label}</span>
+                                    </button>
+                                ))}
+                            </nav>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Montant (€) *</label>
-                            <div className="relative">
-                                <input 
-                                    type="number" 
-                                    name="amount" 
-                                    value={formData.amount} 
-                                    onChange={handleChange} 
-                                    min="0.01" 
-                                    step="0.01" 
-                                    className="w-full pl-4 pr-12 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all text-lg font-medium text-slate-900"
-                                    required 
-                                    disabled={isLoading}
-                                />
-                                <span className="absolute right-4 top-3.5 text-slate-400 font-bold">EUR</span>
-                            </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                            <Card className="p-4 bg-gray-900 text-white">
+                                <div className="text-sm font-semibold mb-2">Besoin d'aide ?</div>
+                                <div className="text-xs text-gray-400 mb-4">Conseiller disponible 24/7</div>
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700 border-none text-xs py-2">
+                                    Chatter maintenant
+                                </Button>
+                            </Card>
                         </div>
+                    </aside>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Description (Optionnel)</label>
-                            <input 
-                                type="text" 
-                                name="description" 
-                                value={formData.description} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all"
-                                disabled={isLoading}
-                            />
-                        </div>
-
-                        <div className="pt-4">
-                            <button 
-                                type="submit" 
-                                // Le bouton est désactivé si isLoading est true
-                                className="w-full md:w-auto bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-sky-500/20 transition-all transform active:scale-[0.98] disabled:bg-sky-400 disabled:shadow-none flex items-center justify-center gap-3"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <div className="spinner"></div>
-                                        <span>Traitement...</span>
-                                    </>
-                                ) : (
-                                    <span>Valider le virement</span>
-                                )}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            );
-        }
-
-        function CardView({ userName }) {
-            const cardNumber = "4970102345678910";
-            const encryptedCardNumber = formatCardNumber(cardNumber); // Utilisation de la fonction de formatage/cryptage
-
-            return (
-                <div className="animate-in fade-in zoom-in-95 duration-300">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6">Votre Carte Bancaire</h2>
-                    
-                    <div className="flex flex-col items-center">
-                        {/* Realistic CSS Card */}
-                        <div className="w-full max-w-[380px] aspect-[1.586] rounded-2xl p-6 relative text-white shadow-2xl overflow-hidden transform transition-transform hover:scale-105 duration-300 group">
-                            {/* Background Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-bl from-[#2c3e50] to-[#000000] z-0"></div>
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 z-0"></div>
-                            
-                            {/* Abstract Shapes */}
-                            <div className="absolute -top-20 -right-20 w-60 h-60 bg-sky-500 rounded-full blur-[60px] opacity-40"></div>
-                            <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500 rounded-full blur-[50px] opacity-30"></div>
-
-                            <div className="relative z-10 h-full flex flex-col justify-between">
-                                <div className="flex justify-between items-start">
-                                    {/* Chip */}
-                                    <div className="w-12 h-9 bg-gradient-to-br from-yellow-200 to-yellow-500 rounded-md border border-yellow-600/50 flex items-center justify-center overflow-hidden relative shadow-sm">
-                                        <div className="absolute w-full h-[1px] bg-yellow-800/40 top-1/3"></div>
-                                        <div className="absolute w-full h-[1px] bg-yellow-800/40 bottom-1/3"></div>
-                                        <div className="absolute h-full w-[1px] bg-yellow-800/40 left-1/3"></div>
-                                        <div className="absolute h-full w-[1px] bg-yellow-800/40 right-1/3"></div>
-                                        <div className="w-4 h-4 border border-yellow-800/40 rounded-sm"></div>
-                                    </div>
-                                    {/* Contactless Symbol - Simulated with SVG from the original code */}
-                                    <svg className="w-6 h-6 opacity-80 contactless-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-                                    </svg>
-                                </div>
-
-                                <div className="mt-4">
-                                    {/* Numéro de carte crypté */}
-                                    <div className="text-xl md:text-2xl font-mono tracking-widest drop-shadow-md">
-                                        {encryptedCardNumber}
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-end mt-auto">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase text-slate-300 tracking-wider mb-0.5">Titulaire</span>
-                                        <span className="font-medium tracking-wide uppercase text-sm md:text-base truncate max-w-[200px]">{userName}</span>
-                                    </div>
-                                    <div className="flex flex-col items-center mr-4">
-                                        <span className="text-[8px] uppercase text-slate-300">Expires</span>
-                                        <span className="font-mono text-sm">11/28</span>
-                                    </div>
-                                    <div className="italic font-bold text-2xl tracking-tighter leading-none">
-                                        VISA
-                                        <span className="block text-[8px] not-italic font-normal tracking-normal text-right">Premium</span>
-                                    </div>
+                    {/* Main Content Area */}
+                    <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : ''}`}>
+                        {/* Header */}
+                        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-30">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+                                    <lucide.Menu />
+                                </button>
+                                <div>
+                                    <h1 className="text-xl font-bold">Bonjour, {INITIAL_DATA.user.name.split(' ')[0]} 👋</h1>
+                                    <p className="text-xs text-gray-400">Dernière connexion: {INITIAL_DATA.user.lastLogin}</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="mt-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full max-w-md">
-                            <h3 className="font-semibold text-slate-800 mb-4">Détails de la carte</h3>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between py-2 border-b border-slate-100">
-                                    <span className="text-slate-500">Statut</span>
-                                    <span className="text-green-600 font-medium flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full bg-green-500"></span> Active
-                                    </span>
+                            <div className="flex items-center gap-4">
+                                <div className="hidden md:flex relative group">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={18} />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Rechercher une transaction..." 
+                                        className="bg-gray-50 border-none rounded-full pl-10 pr-4 py-2 w-64 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition-all"
+                                    />
                                 </div>
-                                <div className="flex justify-between py-2 border-b border-slate-100">
-                                    <span className="text-slate-500">Type</span>
-                                    <span className="text-slate-800">Débit immédiat</span>
-                                </div>
-                                <div className="flex justify-between py-2 border-b border-slate-100">
-                                    <span className="text-slate-500">Plafond hebdomadaire</span>
-                                    <span className="text-slate-800 font-mono">5 000,00 €</span>
-                                </div>
-                                <div className="flex justify-between py-2">
-                                    <span className="text-slate-500">Sans contact</span>
-                                    <span className="text-slate-800">Activé</span>
+                                <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-full relative">
+                                    <Bell size={22} />
+                                    {notifications > 0 && (
+                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                                    )}
+                                </button>
+                                <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-100 cursor-pointer">
+                                    <img src={INITIAL_DATA.user.avatar} alt="Profile" />
                                 </div>
                             </div>
-                            <button className="mt-6 w-full py-2 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
-                                Faire opposition
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
+                        </header>
 
-        // Nouvelle vue pour le service de Prêt
-        function LoanView() {
-            return (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in zoom-in-95 duration-300">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <TrendingUp className="text-sky-500" /> Nos Services de Prêt
-                    </h2 >
-                    <p className="text-slate-500 mb-6">Financez vos projets avec nos solutions de financement flexibles et avantageuses.</p>
-                    
-                    <div className="space-y-4">
-                        <div className="p-4 bg-sky-50 rounded-lg border border-sky-100">
-                            <h3 className="font-semibold text-sky-800">Prêt Immobilier</h3>
-                            <p className="text-sm text-sky-700">Taux compétitifs pour l'achat de votre résidence principale ou secondaire.</p>
-                        </div>
-                        <div className="p-4 bg-sky-50 rounded-lg border border-sky-100">
-                            <h3 className="font-semibold text-sky-800">Prêt Auto/Moto</h3>
-                            <p className="text-sm text-sky-700">Obtenez un financement rapide pour votre nouveau véhicule.</p>
-                        </div>
-                        <div className="p-4 bg-sky-50 rounded-lg border border-sky-100">
-                            <h3 className="font-semibold text-sky-800">Prêt Personnel</h3>
-                            <p className="text-sm text-sky-700">Libre utilisation, pour tous vos besoins de trésorerie.</p>
-                        </div>
-                    </div>
-                    
-                    <button className="mt-8 w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-4 rounded-lg shadow-lg shadow-sky-500/30 transition-all">
-                        Faire une simulation de prêt
-                    </button>
-                </div>
-            );
-        }
+                        {/* Modales */}
+                        <Modal 
+                            isOpen={isTransferModalOpen} 
+                            onClose={() => setIsTransferModalOpen(false)}
+                            title="Virement Réussi"
+                        >
+                            <div className="text-center py-4">
+                                <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <CheckCircle2 size={48} />
+                                </div>
+                                <h4 className="text-2xl font-bold mb-2">Félicitations !</h4>
+                                <p className="text-gray-500 mb-8">Votre virement a bien été pris en compte et sera traité dans les plus brefs délais.</p>
+                                <Button variant="primary" className="w-full py-3" onClick={() => setIsTransferModalOpen(false)}>
+                                    Retour au tableau de bord
+                                </Button>
+                            </div>
+                        </Modal>
 
-        // Nouvelle vue pour le service de Réglage
-        function SettingsView() {
-            return (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8 animate-in fade-in zoom-in-95 duration-300">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Settings className="text-sky-500" /> Réglages et Préférences
-                    </h2 >
-                    <p className="text-slate-500 mb-6">Gérez votre compte, vos notifications et vos paramètres de sécurité.</p>
-                    
-                    <div className="space-y-6">
-                        <div className="border border-slate-100 rounded-lg p-4">
-                            <h3 className="font-semibold text-slate-800 mb-2">Sécurité</h3>
-                            <ul className="text-sm space-y-2">
-                                <li className="flex justify-between items-center py-1">
-                                    <span className="text-slate-700">Changer le mot de passe</span>
-                                    <span className="text-sky-500 cursor-pointer hover:text-sky-700">Gérer</span>
-                                </li>
-                                <li className="flex justify-between items-center py-1">
-                                    <span className="text-slate-700">Authentification à deux facteurs</span>
-                                    <span className="text-green-500">Activée</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="border border-slate-100 rounded-lg p-4">
-                            <h3 className="font-semibold text-slate-800 mb-2">Notifications</h3>
-                            <ul className="text-sm space-y-2">
-                                <li className="flex justify-between items-center py-1">
-                                    <span className="text-slate-700">Alertes par e-mail</span>
-                                    <span className="text-red-500">Désactivées</span>
-                                </li>
-                                <li className="flex justify-between items-center py-1">
-                                    <span className="text-slate-700">Notifications Push</span>
-                                    <span className="text-green-500">Activées</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
+                        <Modal
+                            isOpen={!!selectedTransaction}
+                            onClose={() => setSelectedTransaction(null)}
+                            title="Détails de l'opération"
+                        >
+                            <ReceiptModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />
+                        </Modal>
 
-        // ==========================================
-        // COMPOSANT PRINCIPAL APP
-        // ==========================================
-        function App() {
-            const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-            
-            // --- LOGIQUE DE PERSISTANCE ---
-            const [balance, setBalance] = React.useState(() => {
-                if (typeof window !== 'undefined') {
-                    const savedBalance = localStorage.getItem('barclays_balance');
-                    // Utiliser le solde initial modifié pour la nouvelle transaction
-                    return savedBalance ? parseFloat(savedBalance) : INITIAL_DATA.initialBalance;
-                }
-                return INITIAL_DATA.initialBalance;
-            });
-
-            const [transactions, setTransactions] = React.useState(() => {
-                if (typeof window !== 'undefined') {
-                    const savedTransactions = localStorage.getItem('barclays_transactions');
-                    try {
-                        const parsed = JSON.parse(savedTransactions);
-                        // S'assurer que c'est un tableau, sinon retourner les données initiales
-                        return Array.isArray(parsed) ? parsed : INITIAL_DATA.initialTransactions;
-                    } catch (e) {
-                        console.error("Erreur de parsing des transactions de localStorage:", e);
-                        return INITIAL_DATA.initialTransactions;
-                    }
-                }
-                return INITIAL_DATA.initialTransactions;
-            });
-
-            const [currentView, setCurrentView] = React.useState('dashboard');
-            const [showNotification, setShowNotification] = React.useState(false);
-            // État pour la notification de succès du virement
-            const [showSuccessToast, setShowSuccessToast] = React.useState(false);
-            // NOUVEL ÉTAT POUR LE MODAL DE CONTACT
-            const [showContactModal, setShowContactModal] = React.useState(false);
-            
-            // NOUVEAUX ÉTATS POUR LE MODAL DE REÇU
-            const [showReceiptModal, setShowReceiptModal] = React.useState(false);
-            const [selectedTransaction, setSelectedTransaction] = React.useState(null);
-            
-            // NOUVEL ÉTAT POUR L'AFFICHAGE DU SOLDE
-            const [showBalance, setShowBalance] = React.useState(true); // Afficher par défaut
-
-            // Fonction pour basculer la visibilité du solde
-            const toggleBalanceVisibility = () => {
-                setShowBalance(prev => !prev);
-            };
-
-
-            // Sauvegarde automatique dans localStorage à chaque modification
-            React.useEffect(() => {
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem('barclays_balance', balance.toString());
-                    localStorage.setItem('barclays_transactions', JSON.stringify(transactions));
-                }
-            }, [balance, transactions]);
-
-            // Quand la connexion réussit, on passe à l'état "connecté"
-            const handleLoginSuccess = () => {
-                setIsLoggedIn(true);
-                setCurrentView('dashboard');
-            };
-
-            // Quand on se déconnecte, on repasse à la page de connexion
-            const handleLogout = () => {
-                setIsLoggedIn(false);
-                setShowNotification(false);
-                setShowSuccessToast(false);
-                setShowContactModal(false); 
-                setShowReceiptModal(false); // Réinitialiser le modal de reçu
-                setSelectedTransaction(null);
-                setCurrentView('dashboard');
-            };
-            
-            // Fonction pour afficher le modal de reçu
-            const handleShowReceipt = (tx) => {
-                setSelectedTransaction(tx);
-                setShowReceiptModal(true);
-            }
-
-            // Logique de virement
-            const handleTransfer = (transferData) => {
-                // Cette fonction n'est plus utilisée pour la logique de virement réel,
-                // car le virement est bloqué dans TransferView. Cependant, on la laisse
-                // pour que le code compile, mais elle sera ignorée.
-                return { success: false, message: "Bloqué par les frais." };
-            };
-
-            // Si l'utilisateur n'est pas connecté, on affiche la page de Login
-            if (!isLoggedIn) {
-                return (
-                    <LoginPage 
-                        onLoginSuccess={handleLoginSuccess} 
-                        correctLogin={INITIAL_DATA.user} 
-                        bankName={INITIAL_DATA.bankName} 
-                    />
-                );
-            }
-
-            // Si l'utilisateur est connecté, on affiche le tableau de bord
-            return (
-                <div className="dashboard-container flex flex-col h-screen min-h-screen bg-slate-50 font-sans text-slate-700">
-                    <Header 
-                        userName={INITIAL_DATA.user.name} 
-                        bankName={INITIAL_DATA.bankName}
-                        onLogout={handleLogout}
-                        onToggleNotification={() => setShowNotification(!showNotification)}
-                        notificationActive={showNotification}
-                    />
-                    
-                    {showNotification && (
-                        <NotificationPanel message={INITIAL_DATA.notificationMessage} onClose={() => setShowNotification(false)} />
-                    )}
-                    
-                    {/* Affichage du Toast de succès - S'affiche après 3s de chargement */}
-                    {showSuccessToast && (
-                        <SuccessToast 
-                            message="Virement effectué avec succès !" 
-                            onClose={() => setShowSuccessToast(false)} 
-                        />
-                    )}
-                    
-                    {/* AFFICHAGE DU MODAL DE CONTACT */}
-                    {showContactModal && (
-                        <ContactManagerModal 
-                            isOpen={showContactModal}
-                            onClose={() => setShowContactModal(false)}
-                            email={INITIAL_DATA.contactDetails.email}
-                            phone={INITIAL_DATA.contactDetails.phone}
-                        />
-                    )}
-                    
-                    {/* AFFICHAGE DU MODAL DE REÇU */}
-                    {showReceiptModal && (
-                        <ReceiptModal 
-                            isOpen={showReceiptModal}
-                            onClose={() => { setShowReceiptModal(false); setSelectedTransaction(null); }}
-                            transaction={selectedTransaction}
-                            bankName={INITIAL_DATA.bankName}
-                            userName={INITIAL_DATA.user.name}
-                        />
-                    )}
-
-
-                    <div className="flex flex-1 overflow-hidden relative">
-                        {/* Sidebar Navigation for Desktop / Bottom for Mobile */}
-                        <Navigation currentView={currentView} setCurrentView={setCurrentView} />
-
-                        <main className="main-content flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50">
-                            <div className="max-w-4xl mx-auto">
+                        {/* Page Content */}
+                        <main className="p-8">
+                            <div className="animate-in slide-in-from-top-4 duration-500">
                                 {currentView === 'dashboard' && (
                                     <DashboardView 
-                                        balance={balance} 
-                                        transactions={transactions} 
-                                        onShowContactModal={() => setShowContactModal(true)} 
+                                        data={INITIAL_DATA} 
+                                        onNewTransfer={() => setIsTransferModalOpen(true)} 
                                         onShowReceipt={handleShowReceipt} // Nouvelle prop pour afficher le reçu
                                         // NOUVELLES PROPS POUR L'AFFICHAGE DU SOLDE
                                         showBalance={showBalance}
