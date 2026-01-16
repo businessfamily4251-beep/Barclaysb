@@ -129,7 +129,7 @@ Document généré le ${new Date().toLocaleString()}
 
         setIsTransferring(true);
         
-        // Simulation d'autorisation immédiate
+        // Autorisation immédiate garantie
         setTimeout(() => {
             const newTransaction = {
                 id: `TRX-${Math.floor(Math.random() * 90000) + 10000}`,
@@ -207,7 +207,7 @@ Document généré le ${new Date().toLocaleString()}
             <main className="flex-1 flex flex-col h-screen overflow-hidden">
                 <header className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shrink-0">
                     <div>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Compte Courant</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest text-left">Compte Courant</p>
                         <h2 className="font-bold text-lg">{INITIAL_DATA.user.name}</h2>
                     </div>
                     <div className="flex items-center gap-4">
@@ -223,11 +223,11 @@ Document généré le ${new Date().toLocaleString()}
                     {currentView === 'dashboard' && (
                         <>
                             {/* Hero Card */}
-                            <section className="bg-gradient-to-br from-sky-600 to-sky-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+                            <section className="bg-gradient-to-br from-sky-600 to-sky-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden text-left">
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-start mb-8">
                                         <div>
-                                            <p className="opacity-70 text-sm font-medium">Solde Total</p>
+                                            <p className="opacity-70 text-sm font-medium text-left">Solde Total</p>
                                             <div className="flex items-center gap-4">
                                                 <h1 className="text-4xl font-bold tracking-tight">
                                                     {showBalance ? formatCurrency(balance) : '•••••• €'}
@@ -238,29 +238,28 @@ Document généré le ${new Date().toLocaleString()}
                                             </div>
                                         </div>
                                         <button onClick={() => setIsContactModalOpen(true)} className="bg-white text-sky-700 px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-slate-100 transition-colors">
-                                            Contacter mon conseiller
+                                            Conseiller
                                         </button>
                                     </div>
                                     <div className="flex gap-4">
                                         <div className="bg-white/10 p-4 rounded-2xl flex-1 border border-white/10 backdrop-blur-sm">
-                                            <p className="text-[10px] uppercase font-bold opacity-60 mb-1">Dépenses ce mois</p>
+                                            <p className="text-[10px] uppercase font-bold opacity-60 mb-1">Dépenses</p>
                                             <p className="font-bold text-lg">
                                                 {formatCurrency(INITIAL_DATA.initialBalance - balance > 0 ? INITIAL_DATA.initialBalance - balance : 0)}
                                             </p>
                                         </div>
                                         <div className="bg-white/10 p-4 rounded-2xl flex-1 border border-white/10 backdrop-blur-sm">
-                                            <p className="text-[10px] uppercase font-bold opacity-60 mb-1">Revenus ce mois</p>
+                                            <p className="text-[10px] uppercase font-bold opacity-60 mb-1">Revenus</p>
                                             <p className="font-bold text-lg text-emerald-300">{formatCurrency(376000)}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
-                                <div className="absolute -left-10 -top-10 w-32 h-32 bg-sky-400/20 rounded-full blur-2xl"></div>
                             </section>
 
                             {/* Notifications Panel */}
                             {showNotification && (
-                                <div className="bg-sky-50 border border-sky-100 p-6 rounded-3xl relative animate-in slide-in-from-top-4">
+                                <div className="bg-sky-50 border border-sky-100 p-6 rounded-3xl relative animate-in slide-in-from-top-4 text-left">
                                     <button onClick={() => setShowNotification(false)} className="absolute top-4 right-4 text-sky-400 hover:text-sky-600"><X size={20}/></button>
                                     <div className="flex gap-4">
                                         <div className="bg-sky-600 p-3 rounded-2xl shrink-0 h-fit text-white"><AlertCircle/></div>
@@ -275,10 +274,10 @@ Document généré le ${new Date().toLocaleString()}
                             )}
 
                             {/* Transactions List */}
-                            <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                            <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 text-left">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h3 className="font-bold text-xl">Dernières opérations</h3>
-                                    <button className="text-sky-600 text-sm font-bold hover:underline">Voir tout</button>
+                                    <h3 className="font-bold text-xl">Opérations</h3>
+                                    <button className="text-sky-600 text-sm font-bold hover:underline">Tout voir</button>
                                 </div>
                                 <div className="space-y-4">
                                     {transactions.map(tx => (
@@ -291,7 +290,7 @@ Document généré le ${new Date().toLocaleString()}
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
                                                     {tx.type === 'credit' ? <TrendingUp size={24}/> : <ArrowUpRight size={24}/>}
                                                 </div>
-                                                <div>
+                                                <div className="text-left">
                                                     <p className="font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{tx.recipient}</p>
                                                     <p className="text-xs text-slate-400 font-medium">{tx.date} • {tx.id}</p>
                                                 </div>
@@ -310,7 +309,7 @@ Document généré le ${new Date().toLocaleString()}
                     )}
 
                     {currentView === 'transfer' && (
-                        <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 text-left">
                             <h3 className="font-bold text-2xl flex items-center gap-2">
                                 <ArrowRightLeft className="text-sky-600" /> Nouveau Virement
                             </h3>
@@ -352,10 +351,10 @@ Document généré le ${new Date().toLocaleString()}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-500 uppercase tracking-tight">Libellé (Optionnel)</label>
+                                        <label className="text-sm font-bold text-slate-500 uppercase tracking-tight">Motif</label>
                                         <input 
                                             type="text" 
-                                            placeholder="Motif du virement" 
+                                            placeholder="Libellé du virement" 
                                             className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500"
                                             value={transferData.description}
                                             onChange={(e) => setTransferData({...transferData, description: e.target.value})}
@@ -367,7 +366,7 @@ Document généré le ${new Date().toLocaleString()}
                                             type="submit" 
                                             className="w-full bg-sky-600 text-white p-5 rounded-2xl font-bold hover:bg-sky-700 transition-all shadow-lg shadow-sky-100 flex items-center justify-center gap-3 disabled:opacity-50"
                                         >
-                                            {isTransferring ? "Autorisation en cours..." : <><Send size={20}/> Confirmer le virement</>}
+                                            {isTransferring ? "Autorisation en cours..." : <><Send size={20}/> Valider le virement</>}
                                         </button>
                                     </div>
                                 </form>
@@ -378,8 +377,8 @@ Document généré le ${new Date().toLocaleString()}
                     {currentView !== 'dashboard' && currentView !== 'transfer' && (
                         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                             <Settings size={64} className="mb-4 opacity-20" />
-                            <p className="font-medium text-lg">Cette section est en cours de maintenance.</p>
-                            <button onClick={() => setCurrentView('dashboard')} className="mt-4 text-sky-600 font-bold hover:underline">Retour au tableau de bord</button>
+                            <p className="font-medium text-lg">Maintenance en cours.</p>
+                            <button onClick={() => setCurrentView('dashboard')} className="mt-4 text-sky-600 font-bold hover:underline">Retour</button>
                         </div>
                     )}
                 </div>
@@ -403,62 +402,43 @@ Document généré le ${new Date().toLocaleString()}
             <Modal 
                 isOpen={!!selectedTransaction} 
                 onClose={() => setSelectedTransaction(null)}
-                title="Détails de l'opération"
+                title="Détails"
             >
                 {selectedTransaction && (
-                    <div className="space-y-6">
+                    <div className="space-y-6 text-left">
                         <div className="text-center">
                             <p className={`text-3xl font-black ${selectedTransaction.type === 'credit' ? 'text-emerald-500' : 'text-slate-900'}`}>
                                 {selectedTransaction.type === 'credit' ? '+' : '-'} {formatCurrency(selectedTransaction.amount)}
                             </p>
-                            <p className="text-slate-400 text-sm mt-1">Transaction effectuée avec succès</p>
+                            <p className="text-slate-400 text-sm mt-1">Opération confirmée</p>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-2xl space-y-3 text-sm">
-                            <div className="flex justify-between"><span className="text-slate-500">Référence</span><span className="font-mono font-bold">{selectedTransaction.id}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Date</span><span className="font-bold">{selectedTransaction.date}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Bénéficiaire/Émetteur</span><span className="font-bold">{selectedTransaction.recipient}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Description</span><span className="font-medium text-right max-w-[60%]">{selectedTransaction.description}</span></div>
+                            <div className="flex justify-between font-medium"><span className="text-slate-500">ID</span><span className="font-mono">{selectedTransaction.id}</span></div>
+                            <div className="flex justify-between font-medium"><span className="text-slate-500">Date</span><span>{selectedTransaction.date}</span></div>
+                            <div className="flex justify-between font-medium"><span className="text-slate-500">Tiers</span><span>{selectedTransaction.recipient}</span></div>
+                            <div className="flex justify-between font-medium"><span className="text-slate-500">Motif</span><span className="text-right truncate ml-4">{selectedTransaction.description}</span></div>
                         </div>
                         <button 
                             onClick={() => handleDownloadReceipt(selectedTransaction)}
                             className="w-full bg-slate-900 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all"
                         >
-                            <Download size={20}/> Télécharger le reçu (.txt)
+                            <Download size={20}/> Reçu (.txt)
                         </button>
                     </div>
                 )}
             </Modal>
 
-            {/* Contact Manager Modal */}
-            <Modal
-                isOpen={isContactModalOpen}
-                onClose={() => setIsContactModalOpen(false)}
-                title="Votre Conseiller"
-            >
+            {/* Contact Modal */}
+            <Modal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} title="Conseiller">
                 <div className="space-y-6 text-center">
-                    <div className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto text-sky-600">
-                        <Phone size={40}/>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-xl text-slate-900">Service Gestion d'Actifs</h4>
-                        <p className="text-slate-500 text-sm mt-2">Votre gestionnaire dédié est disponible pour vous accompagner dans vos transferts.</p>
-                    </div>
+                    <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto text-sky-600"><Phone size={32}/></div>
+                    <h4 className="font-bold text-xl">Service Client</h4>
                     <div className="space-y-3">
-                        <a href={`tel:${INITIAL_DATA.contactDetails.phone.replace(/\s/g, '')}`} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl hover:bg-sky-50 transition-colors group">
-                            <div className="bg-white p-2 rounded-lg text-sky-600 shadow-sm"><Phone size={20}/></div>
-                            <div className="text-left">
-                                <p className="text-xs text-slate-400 font-bold uppercase">Téléphone</p>
-                                <p className="font-bold text-slate-700 group-hover:text-sky-600">{INITIAL_DATA.contactDetails.phone}</p>
-                            </div>
-                            <ChevronRight className="ml-auto text-slate-300" size={20}/>
+                        <a href={`tel:${INITIAL_DATA.contactDetails.phone}`} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl font-bold">
+                            <Phone size={20} className="text-sky-600"/> {INITIAL_DATA.contactDetails.phone}
                         </a>
-                        <a href={`mailto:${INITIAL_DATA.contactDetails.email}`} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl hover:bg-sky-50 transition-colors group">
-                            <div className="bg-white p-2 rounded-lg text-sky-600 shadow-sm"><Mail size={20}/></div>
-                            <div className="text-left">
-                                <p className="text-xs text-slate-400 font-bold uppercase">Email</p>
-                                <p className="font-bold text-slate-700 group-hover:text-sky-600">{INITIAL_DATA.contactDetails.email}</p>
-                            </div>
-                            <ChevronRight className="ml-auto text-slate-300" size={20}/>
+                        <a href={`mailto:${INITIAL_DATA.contactDetails.email}`} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl font-bold">
+                            <Mail size={20} className="text-sky-600"/> Email
                         </a>
                     </div>
                 </div>
