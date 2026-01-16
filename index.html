@@ -6,445 +6,230 @@ import {
   ArrowUpRight, Send
 } from 'lucide-react';
 
-// ==========================================
-// DONNÉES ET CONFIGURATION INITIALES
-// ==========================================
-
-const INITIAL_DATA = {
-    bankName: "BARCLAYS",
+const DATA = {
     user: {
         name: "Monique Abillard",
         loginId: "7897620168",
         password: "548521"
     },
-    initialBalance: 376000,
-    initialTransactions: [
-        { id: 'TRX-99281', date: '08/12/2025', recipient: 'Blockchain Central', account: 'LU44 2910 4402 ****', amount: 376000, type: 'credit', description: 'Transfert de produits financiers (Actifs Numériques)' },
-    ],
-    notificationMessage: `Information Importante\n\n1. 376 000 euros ont été générés à la suite de placements effectués sur les marchés.\nEn l’absence d’une infrastructure de gestion d’actifs numériques dédiée, les produits financiers ont été provisoirement centralisés auprès de la banque Barclays, avant d’être transférés sur votre compte.`,
-    contactDetails: {
+    balance: 376000,
+    contact: {
         email: "serviceclients@mail.com",
         phone: "+33 6 44 67 29 29"
     }
 };
 
-const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-};
-
-// ==========================================
-// COMPOSANTS UI RÉUTILISABLES
-// ==========================================
+const formatEuro = (val) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val);
 
 const SuccessToast = ({ message, onClose }) => {
     useEffect(() => {
-        const timer = setTimeout(onClose, 4000);
+        const timer = setTimeout(onClose, 3000);
         return () => clearTimeout(timer);
     }, [onClose]);
-
     return (
-        <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 animate-bounce">
-            <div className="flex items-center gap-3 bg-green-600 text-white p-4 rounded-xl shadow-2xl">
-                <CheckCircle className="w-6 h-6" />
-                <span className="font-medium">{message}</span>
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+            <div className="flex items-center gap-3 bg-emerald-600 text-white p-4 rounded-2xl shadow-xl">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-bold">{message}</span>
             </div>
         </div>
     );
 };
-
-const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                <div className="bg-sky-600 p-4 text-white flex justify-between items-center">
-                    <h3 className="font-bold">{title}</h3>
-                    <button onClick={onClose} className="hover:bg-white/20 p-1 rounded-full"><X size={20}/></button>
-                </div>
-                <div className="p-6">{children}</div>
-            </div>
-        </div>
-    );
-};
-
-// ==========================================
-// APPLICATION PRINCIPALE
-// ==========================================
 
 export default function App() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [currentView, setCurrentView] = useState('dashboard');
-    const [balance, setBalance] = useState(INITIAL_DATA.initialBalance);
-    const [transactions, setTransactions] = useState(INITIAL_DATA.initialTransactions);
-    const [showBalance, setShowBalance] = useState(true);
-    const [showNotification, setShowNotification] = useState(true);
-    const [selectedTransaction, setSelectedTransaction] = useState(null);
-    const [toast, setToast] = useState(null);
-    const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-    
-    // State pour le virement
-    const [transferData, setTransferData] = useState({ recipient: '', iban: '', amount: '', description: '' });
-    const [isTransferring, setIsTransferring] = useState(false);
+    const [isAuth, setIsAuth] = useState(false);
+    const [view, setView] = useState('home');
+    const [solde, setSolde] = useState(DATA.balance);
+    const [showSolde, setShowSolde] = useState(true);
+    const [notif, setNotif] = useState(true);
+    const [msg, setMsg] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-    // Login logic
-    const handleLogin = (e) => {
+    const [txs, setTxs] = useState([
+        { id: 'TX-99281', date: '08/12/2025', label: 'Blockchain Central', amount: 376000, type: 'plus' }
+    ]);
+
+    const onLogin = (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        if (formData.get('loginId') === INITIAL_DATA.user.loginId && formData.get('password') === INITIAL_DATA.user.password) {
-            setIsLoggedIn(true);
+        const d = new FormData(e.target);
+        if (d.get('uid') === DATA.user.loginId && d.get('pwd') === DATA.user.password) {
+            setIsAuth(true);
         } else {
-            setToast("Identifiants incorrects");
+            setMsg("Accès refusé");
         }
     };
 
-    const handleDownloadReceipt = (tx) => {
-        const content = `
-BARCLAYS BANK - REÇU OFFICIEL
------------------------------------
-Client: ${INITIAL_DATA.user.name}
-Référence: ${tx.id}
-Date: ${tx.date}
-Montant: ${formatCurrency(tx.amount)}
-Type: ${tx.type === 'credit' ? 'CRÉDIT' : 'DÉBIT'}
-Description: ${tx.description}
------------------------------------
-Document généré le ${new Date().toLocaleString()}
-        `;
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Recu_Barclays_${tx.id}.txt`;
-        a.click();
-    };
-
-    const handleTransfer = (e) => {
+    const onTransfer = (e) => {
         e.preventDefault();
-        const amount = parseFloat(transferData.amount);
+        const d = new FormData(e.target);
+        const amt = parseFloat(d.get('amt'));
+        if (amt > solde) return setMsg("Fonds insuffisants");
         
-        if (amount > balance) {
-            setToast("Solde insuffisant");
-            return;
-        }
-
-        setIsTransferring(true);
-        
-        // Autorisation immédiate garantie
+        setLoading(true);
         setTimeout(() => {
-            const newTransaction = {
-                id: `TRX-${Math.floor(Math.random() * 90000) + 10000}`,
-                date: new Date().toLocaleDateString('fr-FR'),
-                recipient: transferData.recipient,
-                account: transferData.iban,
-                amount: amount,
-                type: 'debit',
-                description: transferData.description || 'Virement sortant'
-            };
-
-            setBalance(prev => prev - amount);
-            setTransactions(prev => [newTransaction, ...prev]);
-            setToast("Virement effectué avec succès");
-            setIsTransferring(false);
-            setCurrentView('dashboard');
-            setTransferData({ recipient: '', iban: '', amount: '', description: '' });
-        }, 1500);
+            setSolde(s => s - amt);
+            setTxs([{ id: 'TX-'+Math.random().toString(36).substr(2, 5).toUpperCase(), date: new Date().toLocaleDateString(), label: d.get('to'), amount: amt, type: 'minus' }, ...txs]);
+            setMsg("Transfert validé");
+            setLoading(false);
+            setView('home');
+        }, 1200);
     };
 
-    if (!isLoggedIn) {
+    if (!isAuth) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden">
-                    <div className="bg-sky-600 p-8 text-center text-white">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+                <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
+                    <div className="bg-sky-600 p-10 text-center text-white">
                         <Landmark className="mx-auto mb-4 w-12 h-12" />
-                        <h1 className="text-3xl font-bold tracking-tighter">BARCLAYS</h1>
-                        <p className="opacity-80">Espace Client Sécurisé</p>
+                        <h1 className="text-3xl font-black tracking-tighter">BARCLAYS</h1>
+                        <p className="text-sky-100 text-sm mt-2">Authentification Sécurisée</p>
                     </div>
-                    <form onSubmit={handleLogin} className="p-8 space-y-4">
-                        <input name="loginId" type="text" placeholder="Identifiant" className="w-full p-4 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-sky-500" required />
-                        <input name="password" type="password" placeholder="Code secret" className="w-full p-4 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-sky-500" required />
-                        <button type="submit" className="w-full bg-sky-600 text-white p-4 rounded-xl font-bold hover:bg-sky-700 transition-colors">Connexion</button>
+                    <form onSubmit={onLogin} className="p-10 space-y-5">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Identifiant</label>
+                            <input name="uid" type="text" className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-sky-500 transition-all" required />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mot de passe</label>
+                            <input name="pwd" type="password" className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-sky-500 transition-all" required />
+                        </div>
+                        <button type="submit" className="w-full bg-sky-600 text-white p-5 rounded-2xl font-black hover:bg-sky-700 shadow-lg shadow-sky-200 active:scale-95 transition-all">ACCÉDER</button>
                     </form>
                 </div>
-                {toast && <SuccessToast message={toast} onClose={() => setToast(null)} />}
+                {msg && <SuccessToast message={msg} onClose={() => setMsg(null)} />}
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-900">
-            {/* Sidebar Navigation */}
-            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 space-y-8">
-                <div className="flex items-center gap-2 text-sky-600">
-                    <Landmark size={32} />
+        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-900 font-sans">
+            {/* Sidebar Desktop */}
+            <nav className="hidden md:flex flex-col w-72 bg-white border-r border-slate-100 p-8 space-y-10">
+                <div className="flex items-center gap-3 text-sky-600">
+                    <Landmark size={36} />
                     <span className="font-black text-2xl tracking-tighter">BARCLAYS</span>
                 </div>
-                <nav className="space-y-2">
-                    {[
-                        { id: 'dashboard', icon: Home, label: 'Tableau de bord' },
-                        { id: 'transfer', icon: ArrowRightLeft, label: 'Virements' },
-                        { id: 'card', icon: CreditCard, label: 'Ma Carte' },
-                        { id: 'loan', icon: TrendingUp, label: 'Prêts' },
-                        { id: 'settings', icon: Settings, label: 'Réglages' }
-                    ].map(item => (
-                        <button 
-                            key={item.id}
-                            onClick={() => setCurrentView(item.id)}
-                            className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all ${currentView === item.id ? 'bg-sky-50 text-sky-600 font-bold' : 'text-slate-500 hover:bg-slate-100'}`}
-                        >
-                            <item.icon size={20} />
-                            {item.label}
+                <div className="space-y-3">
+                    {[{id:'home', label:'Synthèse', icon:Home}, {id:'send', label:'Virements', icon:ArrowRightLeft}, {id:'card', label:'Cartes', icon:CreditCard}].map(i => (
+                        <button key={i.id} onClick={() => setView(i.id)} className={`flex items-center gap-4 w-full p-4 rounded-2xl font-bold transition-all ${view === i.id ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:bg-slate-50'}`}>
+                            <i.icon size={22} /> {i.label}
                         </button>
                     ))}
-                </nav>
-                <div className="mt-auto">
-                    <button onClick={() => window.location.reload()} className="flex items-center gap-3 text-red-500 p-3 w-full hover:bg-red-50 rounded-xl font-medium transition-colors">
-                        <LogOut size={20} /> Déconnexion
-                    </button>
                 </div>
-            </aside>
+                <button onClick={() => setIsAuth(false)} className="mt-auto flex items-center gap-4 p-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all">
+                    <LogOut size={22} /> Quitter
+                </button>
+            </nav>
 
-            {/* Main Content */}
+            {/* Content Area */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden">
-                <header className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shrink-0">
+                <header className="bg-white p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                     <div>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest text-left">Compte Courant</p>
-                        <h2 className="font-bold text-lg">{INITIAL_DATA.user.name}</h2>
+                        <h2 className="font-black text-xl text-slate-800 tracking-tight">{DATA.user.name}</h2>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Compte Premier</p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setShowNotification(!showNotification)} className="relative p-2 text-slate-400 hover:text-sky-600">
-                            <Bell size={24} />
-                            {showNotification && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>}
-                        </button>
-                        <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold">MA</div>
+                        <div className="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center text-white font-bold shadow-md shadow-sky-100">MA</div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
-                    {currentView === 'dashboard' && (
-                        <>
-                            {/* Hero Card */}
-                            <section className="bg-gradient-to-br from-sky-600 to-sky-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden text-left">
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-8">
+                <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
+                    {view === 'home' ? (
+                        <div className="max-w-4xl mx-auto space-y-8">
+                            {/* Solde Card */}
+                            <div className="bg-gradient-to-br from-sky-600 to-sky-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+                                <div className="relative z-10 space-y-8">
+                                    <div className="flex justify-between items-start">
                                         <div>
-                                            <p className="opacity-70 text-sm font-medium text-left">Solde Total</p>
-                                            <div className="flex items-center gap-4">
-                                                <h1 className="text-4xl font-bold tracking-tight">
-                                                    {showBalance ? formatCurrency(balance) : '•••••• €'}
-                                                </h1>
-                                                <button onClick={() => setShowBalance(!showBalance)} className="bg-white/20 p-2 rounded-lg hover:bg-white/30">
-                                                    {showBalance ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                            <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-2">Solde disponible</p>
+                                            <div className="flex items-center gap-5">
+                                                <h3 className="text-5xl font-black tracking-tighter">{showSolde ? formatEuro(solde) : '•••••• €'}</h3>
+                                                <button onClick={() => setShowSolde(!showSolde)} className="bg-white/10 p-2 rounded-xl hover:bg-white/20 transition-all">
+                                                    {showSolde ? <EyeOff size={20}/> : <Eye size={20}/>}
                                                 </button>
                                             </div>
                                         </div>
-                                        <button onClick={() => setIsContactModalOpen(true)} className="bg-white text-sky-700 px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-slate-100 transition-colors">
-                                            Conseiller
-                                        </button>
                                     </div>
-                                    <div className="flex gap-4">
-                                        <div className="bg-white/10 p-4 rounded-2xl flex-1 border border-white/10 backdrop-blur-sm">
-                                            <p className="text-[10px] uppercase font-bold opacity-60 mb-1">Dépenses</p>
-                                            <p className="font-bold text-lg">
-                                                {formatCurrency(INITIAL_DATA.initialBalance - balance > 0 ? INITIAL_DATA.initialBalance - balance : 0)}
-                                            </p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-md">
+                                            <p className="text-[10px] uppercase font-bold text-sky-200 mb-1">Dépenses</p>
+                                            <p className="font-bold text-lg">{formatEuro(3240)}</p>
                                         </div>
-                                        <div className="bg-white/10 p-4 rounded-2xl flex-1 border border-white/10 backdrop-blur-sm">
-                                            <p className="text-[10px] uppercase font-bold opacity-60 mb-1">Revenus</p>
-                                            <p className="font-bold text-lg text-emerald-300">{formatCurrency(376000)}</p>
+                                        <div className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-md">
+                                            <p className="text-[10px] uppercase font-bold text-sky-200 mb-1">Revenus</p>
+                                            <p className="font-bold text-lg text-emerald-400">+{formatEuro(376000)}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
-                            </section>
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                            </div>
 
-                            {/* Notifications Panel */}
-                            {showNotification && (
-                                <div className="bg-sky-50 border border-sky-100 p-6 rounded-3xl relative animate-in slide-in-from-top-4 text-left">
-                                    <button onClick={() => setShowNotification(false)} className="absolute top-4 right-4 text-sky-400 hover:text-sky-600"><X size={20}/></button>
-                                    <div className="flex gap-4">
-                                        <div className="bg-sky-600 p-3 rounded-2xl shrink-0 h-fit text-white"><AlertCircle/></div>
-                                        <div>
-                                            <h4 className="font-bold text-sky-900 mb-2">Information Importante</h4>
-                                            <p className="text-sky-800 text-sm leading-relaxed whitespace-pre-line">
-                                                {INITIAL_DATA.notificationMessage}
-                                            </p>
-                                        </div>
+                            {/* Alerte */}
+                            {notif && (
+                                <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl flex gap-5 relative">
+                                    <button onClick={()=>setNotif(false)} className="absolute top-4 right-4 text-amber-300 hover:text-amber-500"><X size={18}/></button>
+                                    <div className="bg-amber-500 p-3 rounded-2xl h-fit text-white shadow-lg shadow-amber-200"><AlertCircle/></div>
+                                    <div className="text-sm text-amber-800 leading-relaxed font-medium">
+                                        <strong className="block mb-1 text-amber-900 uppercase text-[10px] tracking-widest">Notification Système</strong>
+                                        Votre transfert d'actifs numériques de 376 000,00 € a été centralisé. Les fonds sont disponibles.
                                     </div>
                                 </div>
                             )}
 
-                            {/* Transactions List */}
-                            <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 text-left">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="font-bold text-xl">Opérations</h3>
-                                    <button className="text-sky-600 text-sm font-bold hover:underline">Tout voir</button>
-                                </div>
-                                <div className="space-y-4">
-                                    {transactions.map(tx => (
-                                        <div 
-                                            key={tx.id} 
-                                            onClick={() => setSelectedTransaction(tx)}
-                                            className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-slate-200 group"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                                                    {tx.type === 'credit' ? <TrendingUp size={24}/> : <ArrowUpRight size={24}/>}
+                            {/* Transactions */}
+                            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+                                <h4 className="font-black text-xl mb-6 flex items-center gap-3">Historique <span className="bg-slate-100 text-slate-400 text-xs px-3 py-1 rounded-full">{txs.length}</span></h4>
+                                <div className="space-y-2">
+                                    {txs.map(t => (
+                                        <div key={t.id} className="flex items-center justify-between p-5 hover:bg-slate-50 rounded-2xl transition-all border border-transparent hover:border-slate-100 group">
+                                            <div className="flex items-center gap-5">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'plus' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-600'}`}>
+                                                    {t.type === 'plus' ? <TrendingUp size={24}/> : <ArrowUpRight size={24}/>}
                                                 </div>
-                                                <div className="text-left">
-                                                    <p className="font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{tx.recipient}</p>
-                                                    <p className="text-xs text-slate-400 font-medium">{tx.date} • {tx.id}</p>
+                                                <div>
+                                                    <p className="font-bold text-slate-800">{t.label}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">{t.date} • {t.id}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className={`font-black text-lg ${tx.type === 'credit' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                                                    {tx.type === 'credit' ? '+' : '-'} {formatCurrency(tx.amount)}
-                                                </p>
-                                                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-tighter">Confirmé</p>
-                                            </div>
+                                            <p className={`font-black text-lg ${t.type === 'plus' ? 'text-emerald-500' : 'text-slate-900'}`}>
+                                                {t.type === 'plus' ? '+' : '-'} {formatEuro(t.amount)}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
-                            </section>
-                        </>
-                    )}
-
-                    {currentView === 'transfer' && (
-                        <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 text-left">
-                            <h3 className="font-bold text-2xl flex items-center gap-2">
-                                <ArrowRightLeft className="text-sky-600" /> Nouveau Virement
-                            </h3>
-                            <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
-                                <form onSubmit={handleTransfer} className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-500 uppercase tracking-tight">Bénéficiaire</label>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Nom du compte" 
-                                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500"
-                                                value={transferData.recipient}
-                                                onChange={(e) => setTransferData({...transferData, recipient: e.target.value})}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-slate-500 uppercase tracking-tight">IBAN</label>
-                                            <input 
-                                                type="text" 
-                                                placeholder="FR76 ..." 
-                                                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500 font-mono"
-                                                value={transferData.iban}
-                                                onChange={(e) => setTransferData({...transferData, iban: e.target.value})}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-500 uppercase tracking-tight">Montant (€)</label>
-                                        <input 
-                                            type="number" 
-                                            placeholder="0,00" 
-                                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500 text-2xl font-bold"
-                                            value={transferData.amount}
-                                            onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-500 uppercase tracking-tight">Motif</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Libellé du virement" 
-                                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500"
-                                            value={transferData.description}
-                                            onChange={(e) => setTransferData({...transferData, description: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="pt-4">
-                                        <button 
-                                            disabled={isTransferring}
-                                            type="submit" 
-                                            className="w-full bg-sky-600 text-white p-5 rounded-2xl font-bold hover:bg-sky-700 transition-all shadow-lg shadow-sky-100 flex items-center justify-center gap-3 disabled:opacity-50"
-                                        >
-                                            {isTransferring ? "Autorisation en cours..." : <><Send size={20}/> Valider le virement</>}
-                                        </button>
-                                    </div>
-                                </form>
                             </div>
                         </div>
-                    )}
-
-                    {currentView !== 'dashboard' && currentView !== 'transfer' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                            <Settings size={64} className="mb-4 opacity-20" />
-                            <p className="font-medium text-lg">Maintenance en cours.</p>
-                            <button onClick={() => setCurrentView('dashboard')} className="mt-4 text-sky-600 font-bold hover:underline">Retour</button>
+                    ) : (
+                        <div className="max-w-xl mx-auto animate-in fade-in slide-in-from-bottom-5">
+                            <h3 className="text-2xl font-black mb-8 flex items-center gap-4"><ArrowRightLeft className="text-sky-600"/> Nouveau Virement</h3>
+                            <form onSubmit={onTransfer} className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Destinataire</label>
+                                    <input name="to" type="text" placeholder="Nom ou IBAN" className="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500 transition-all" required />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Montant du transfert</label>
+                                    <input name="amt" type="number" placeholder="0.00" className="w-full p-6 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500 transition-all text-2xl font-black" required />
+                                </div>
+                                <button disabled={loading} className="w-full bg-sky-600 text-white p-5 rounded-2xl font-black flex items-center justify-center gap-3 shadow-lg shadow-sky-100 disabled:opacity-50">
+                                    {loading ? "Vérification..." : <><Send size={20}/> VALIDER LE VIREMENT</>}
+                                </button>
+                            </form>
                         </div>
                     )}
                 </div>
 
-                {/* Mobile Navigation */}
-                <nav className="md:hidden bg-white border-t border-slate-200 p-2 flex justify-around shrink-0">
-                    {[
-                        { id: 'dashboard', icon: Home },
-                        { id: 'transfer', icon: ArrowRightLeft },
-                        { id: 'card', icon: CreditCard },
-                        { id: 'settings', icon: Settings }
-                    ].map(item => (
-                        <button key={item.id} onClick={() => setCurrentView(item.id)} className={`p-3 rounded-2xl ${currentView === item.id ? 'bg-sky-600 text-white shadow-lg shadow-sky-200' : 'text-slate-400'}`}>
-                            <item.icon size={24} />
+                {/* Mobile Tab Bar */}
+                <nav className="md:hidden bg-white border-t border-slate-100 p-4 flex justify-around">
+                    {[{id:'home', icon:Home}, {id:'send', icon:ArrowRightLeft}, {id:'card', icon:CreditCard}, {id:'logout', icon:LogOut}].map(i => (
+                        <button key={i.id} onClick={() => i.id === 'logout' ? setIsAuth(false) : setView(i.id)} className={`p-4 rounded-2xl transition-all ${view === i.id ? 'bg-sky-600 text-white shadow-lg' : 'text-slate-400'}`}>
+                            <i.icon size={24} />
                         </button>
                     ))}
                 </nav>
             </main>
 
-            {/* Receipt Modal */}
-            <Modal 
-                isOpen={!!selectedTransaction} 
-                onClose={() => setSelectedTransaction(null)}
-                title="Détails"
-            >
-                {selectedTransaction && (
-                    <div className="space-y-6 text-left">
-                        <div className="text-center">
-                            <p className={`text-3xl font-black ${selectedTransaction.type === 'credit' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                                {selectedTransaction.type === 'credit' ? '+' : '-'} {formatCurrency(selectedTransaction.amount)}
-                            </p>
-                            <p className="text-slate-400 text-sm mt-1">Opération confirmée</p>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl space-y-3 text-sm">
-                            <div className="flex justify-between font-medium"><span className="text-slate-500">ID</span><span className="font-mono">{selectedTransaction.id}</span></div>
-                            <div className="flex justify-between font-medium"><span className="text-slate-500">Date</span><span>{selectedTransaction.date}</span></div>
-                            <div className="flex justify-between font-medium"><span className="text-slate-500">Tiers</span><span>{selectedTransaction.recipient}</span></div>
-                            <div className="flex justify-between font-medium"><span className="text-slate-500">Motif</span><span className="text-right truncate ml-4">{selectedTransaction.description}</span></div>
-                        </div>
-                        <button 
-                            onClick={() => handleDownloadReceipt(selectedTransaction)}
-                            className="w-full bg-slate-900 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all"
-                        >
-                            <Download size={20}/> Reçu (.txt)
-                        </button>
-                    </div>
-                )}
-            </Modal>
-
-            {/* Contact Modal */}
-            <Modal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} title="Conseiller">
-                <div className="space-y-6 text-center">
-                    <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto text-sky-600"><Phone size={32}/></div>
-                    <h4 className="font-bold text-xl">Service Client</h4>
-                    <div className="space-y-3">
-                        <a href={`tel:${INITIAL_DATA.contactDetails.phone}`} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl font-bold">
-                            <Phone size={20} className="text-sky-600"/> {INITIAL_DATA.contactDetails.phone}
-                        </a>
-                        <a href={`mailto:${INITIAL_DATA.contactDetails.email}`} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl font-bold">
-                            <Mail size={20} className="text-sky-600"/> Email
-                        </a>
-                    </div>
-                </div>
-            </Modal>
-
-            {toast && <SuccessToast message={toast} onClose={() => setToast(null)} />}
+            {msg && <SuccessToast message={msg} onClose={() => setMsg(null)} />}
         </div>
     );
 }
